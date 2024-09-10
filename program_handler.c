@@ -3,80 +3,61 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include<unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <sys/shm.h>
+#include<pthread.h>
+      #include <sys/types.h>
+       #include <sys/stat.h>
 #define MAXIMUM_FUNC 3
-int FD_FOR_BOOL[2];
-int INIT_EVERYTHING_ELSE(){
-    if (pipe(FD_FOR_BOOL) == -1) {
-    fprintf(stderr,"Pipe failed");
-    return 1;
-}
-return 0;
-}
-int destroy_ALL(){
-    //for removing pipes:
-    close(FD_FOR_BOOL[0]);
-    close(FD_FOR_BOOL[1]);
-    return 0;
-}
-int bool_(){
-int pid=0;
-read(FD_FOR_BOOL[0], &pid,sizeof(pid));
-if(pid !=0){
-int pidd=getpid();
-if(pidd>pid){
-write(FD_FOR_BOOL[1],&pidd, sizeof(pid));
-return 1;
-}
-else{
-    write(FD_FOR_BOOL[1],&pidd, sizeof(pid));
-    return 0;
-}
-}
-else{
-    pid=getpid();
-    write(FD_FOR_BOOL[1], &pid,sizeof(pid));
-    int pid2=pid;
-    while(pid2!=pid){
-        read(FD_FOR_BOOL[0], &pid, sizeof(pid));
+#define take_input(input,  sizeof_input){\
+         memset((void*)input, 0, sizeof_input);\
+\
+   for(int i=0,j=0, c=0;; i++){\
+    if(i ==sizeof_input-1){\
+        input[i]= '\0';\
+        break;\
+    }\
+    input[i]=getchar();\
+    if(input[i]=='\n'){\
+        if(j||c){\
+        \
+        }\
+        else{\
+            break;\
+        }\
+    }\
+\
+   \
+    if(input[i]=='\''){\
+         if(j==1){\
+            j=0;\
+        \
+    }\
+         else{\
+            if(c==0){\
+            j=1;\
+            }\
+        }\
+    }\
+    if(input[i]=='\"'){\
+         if(c==1){\
+            c=0;\
+        \
+    }\
+         else{\
+            if(j==0){\
+            c=1;\
+            }\
+        }\
+    }\
+\
+   }\
     }
-    if(pid<pid2){
-        return 1;
-    }
-    else{
-        return 0;
-    }
-}
 
-
-return 0;
-}
-FILE *FILE_TO_MEDIATE;
-
-void closepip(int command_NUMBER,char ***strings_to_use, int *number_of_strings){
-    fclose(FILE_TO_MEDIATE);
-}
-
-void PIPE_SHARE(int command_NUMBER,char ***strings_to_use, int *number_of_strings){
-printf("\npipe taken\n");
-if(bool_()==0){
-int UNIQUE=IPC_PRIVATE;
-char KEY_[sizeof(UNIQUE)+1];
-memcpy(&UNIQUE, KEY_, sizeof(UNIQUE));
-KEY_[sizeof(UNIQUE)]='\0';
-FILE_TO_MEDIATE= fopen(KEY_, "w+");
-dup2(fileno(FILE_TO_MEDIATE), stdout);
-}
-if(bool_()==1){
-    dup2(fileno(FILE_TO_MEDIATE), stdin);
-
-}
-}
-
-void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_strings){
+void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
     char *argv[number_of_strings[command_NUMBER]+1];
     for(int i=0; i<number_of_strings[command_NUMBER]; i++){
         argv[i]= strings_to_use[command_NUMBER][i];
@@ -84,7 +65,48 @@ void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_string
     argv[(number_of_strings[command_NUMBER])]=NULL;
     execvp(argv[0], argv);
     }
-    void (*functions[MAXIMUM_FUNC])(int, char ***,int *)={&Run_progam,&PIPE_SHARE, &closepip};
+
+
+
+#define pipe_name strings_to_use2[command_NUMBER][0]
+
+void pipe_reciever(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
+  if (number_of_strings2[command_NUMBER]<1){
+    fprintf(stderr, "\n you didnt give us a  name!!!\n");
+}
+fprintf(stderr,"\n\nreader\n\n\nthe name of FIFO IS %s\n",pipe_name);
+
+int file = open(pipe_name, O_RDONLY);
+
+fprintf(stderr,"\n\n\nOPENNNNN\n\nthe name of FIFO IS %s\n",pipe_name);
+if(dup2(file, STDIN_FILENO)==-1){
+    fprintf(stderr, "\n\n\n\ndidnt work well\n\n");
+}
+close(file);
+fprintf(stderr, "\n confirmation of recieve is done\n");
+
+    }
+
+void pipe_store(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
+if (number_of_strings2[command_NUMBER]<1){
+    fprintf(stderr, "\n you didnt give us a  name!!!\n");
+}
+
+if(mkfifo(pipe_name, 0666)==-1){
+    fprintf(stderr, "\n failed and FIFO already exists\n");
+}
+fprintf(stderr,"\n\n\n\n\nthe name of FIFO IS %s\n",pipe_name);
+int file = open(pipe_name, O_WRONLY);
+
+
+fprintf(stderr,"\nFIFO opened\n");
+if(dup2(file, STDOUT_FILENO)==-1){
+    fprintf(stderr, "\n\n\n\ndidnt work well\n\n");
+}
+close(file);
+fprintf(stderr, "\n confirmation of store is done\n");
+}
+    void (*functions[MAXIMUM_FUNC])(int, char ***,int *, char ***,int *)={&Run_progam, &pipe_store, &pipe_reciever};
 
   #define cleanmem( strings_to_use,  number_of_strings,  INPUT_DETAILED, number_of_COMMANDS){\
     for(int i=0; i<number_of_COMMANDS;i++){\
@@ -182,52 +204,6 @@ void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_string
 #define format_input(){\
     while(getchar()!=EOF&&getchar()!='\n');\
 \}
-#define take_input(input,  sizeof_input){\
-         memset((void*)input, 0, sizeof_input);\
-\
-   for(int i=0,j=0, c=0;; i++){\
-    if(i ==sizeof_input-1){\
-        input[i]= '\0';\
-        break;\
-    }\
-    input[i]=getchar();\
-    if(input[i]=='\n'){\
-        if(j||c){\
-        \
-        }\
-        else{\
-            break;\
-        }\
-    }\
-\
-   \
-    if(input[i]=='\''){\
-         if(j==1){\
-            j=0;\
-        \
-    }\
-         else{\
-            if(c==0){\
-            j=1;\
-            }\
-        }\
-    }\
-    if(input[i]=='\"'){\
-         if(c==1){\
-            c=0;\
-        \
-    }\
-         else{\
-            if(j==0){\
-            c=1;\
-            }\
-        }\
-    }\
-\
-   }\
-    }
-
-
 #define take_input_dyna( input,  size_of_input){\
     input=NULL;\
     input= (char*)malloc(0);\
@@ -273,10 +249,12 @@ void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_string
     }
 
 #define process_input_into_parts(input,INPUT_DETAILED,  number_of_COMMANDS,  size_of_input){\
+    number_of_COMMANDS=0;\
+ if(input[0]=='\n'){fprintf(stderr,"\ninput empty please write something in it\n");}\
+ else{\
  INPUT_DETAILED=NULL;\
  INPUT_DETAILED =(char**)malloc(0);\
     \
-    number_of_COMMANDS=0;\
     for(int i=0,j=0, c=0, e=0;; i++, e++){\
     if(size_of_input==i){\
 \
@@ -326,12 +304,14 @@ void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_string
         }\
     }\
 \
-   }\
+   }}\
 }
 
 #define furthur_process_input(strings_to_use,number_of_strings, INPUT_DETAILED,  number_of_COMMANDS){\
+    if(number_of_COMMANDS==0){}\
+        else{\
     number_of_strings = (int*)malloc(number_of_COMMANDS*sizeof(int));\
-    memset((void*)number_of_strings, 0, number_of_COMMANDS*sizeof(int));\
+    memset(number_of_strings, 0, number_of_COMMANDS*sizeof(int));\
     strings_to_use = (char***)malloc(number_of_COMMANDS*sizeof(char**));\
     for(int i =0; i<number_of_COMMANDS; i++){ \
         strings_to_use[i]=NULL;\
@@ -398,12 +378,12 @@ void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_string
     }\
 \
    }\
-    }\
+    }}\
 }
 #define runprograms(strings_to_use,options, number_of_strings, INPUT_DETAILED,  number_of_COMMANDS,  NUMBER_OF_OPTIONS){\
-    if(!(number_of_COMMANDS>0)){\
+if(!(number_of_COMMANDS>0)){\
     }\
-    else{\
+else{\
 if(fork()==0){\
 printf("enter the options:\n");\
 char input[100];\
@@ -414,7 +394,15 @@ char ***strings_to_use1=NULL;\
 int *number_of_strings1=NULL;\
 process_input_into_parts(input, input_DETAILLLLED,Command_Numbers,100);\
 furthur_process_input(strings_to_use1, number_of_strings1,input_DETAILLLLED,Command_Numbers);\
+char ***strings_to_use2=NULL;\
+int *number_of_strings2=NULL;\
+int Command_Numbers2=0;\
+fprintf(stderr, "enter the arguments for the options YOU chose:\n");\
+take_input(input, 100);\
+process_input_into_parts(input, input_DETAILLLLED,Command_Numbers2,100);\
+furthur_process_input(strings_to_use2, number_of_strings2,input_DETAILLLLED,Command_Numbers2);\
 for(int i =0; i<number_of_COMMANDS; i++){\
+if(!Command_Numbers){continue;}\
 if(fork()==0){\
 for(int j=0; j<NUMBER_OF_OPTIONS; j++){\
 if(j==MAXIMUM_FUNC){\
@@ -422,28 +410,18 @@ if(j==MAXIMUM_FUNC){\
 }\
 for(int i1=0; i1<number_of_strings1[i]; i1++){\
 if(!(strcmp(strings_to_use1[i][i1], options[j]))){\
-            functions[j](i,strings_to_use, number_of_strings);\
+            functions[j](i,strings_to_use, number_of_strings,strings_to_use2, number_of_strings2);\
 }\
 }\
-}\
-char path1[10000];\
-memset(path1, 0, 10000);\
-    getcwd(path1, 0);\
-    strcat(path1, "/");\
-    strcat(path1, "dumb_return");\
-    execlp(path1, NULL);}\ 
-    else{wait(NULL);}\
-}\
-char path1[10000];\
-memset(path1, 0, 10000);\
-    getcwd(path1, 0);\
-    strcat(path1, "/");\
-    strcat(path1, "dumb_return");\
-    execlp(path1, NULL);\
+}}\ 
+    }\
+    for(int ii=0;ii<number_of_COMMANDS; ii++){\
+    wait(NULL);}return 0;\
 }\
 else{wait(NULL);}}}
 
 int main(){    
+
     char **INPUT_DETAILED=NULL;
     char ***strings_to_use=NULL;
     int *number_of_strings=NULL;
@@ -462,7 +440,6 @@ while (1==1){
  
     furthur_process_input(strings_to_use, number_of_strings,INPUT_DETAILED,number_of_COMMANDS);
     if(!(strcmp(input, "QTE\n"))){
-
            cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);
                for (int i=0; i<NUMBER_OF_OPTIONS; i++) {
                free(options[i]);
@@ -473,7 +450,7 @@ while (1==1){
     else{
     runprograms(strings_to_use,options, number_of_strings, INPUT_DETAILED,  number_of_COMMANDS,  NUMBER_OF_OPTIONS);
     cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);
-    
+
     }
 }
 
