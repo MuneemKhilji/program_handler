@@ -19,6 +19,7 @@ struct pipe_struct{
 struct pipe_struct *pipe_struct_array=NULL;
 void init_all(){
     pipe_struct_array = (struct pipe_struct*)malloc(sizeof(struct pipe_struct));
+
 }
 int amount_of_pipes=0;
 void run_program_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER  ){
@@ -441,6 +442,7 @@ char ***strings_to_use1=NULL;\
 int *number_of_strings1=NULL;\
 process_input_into_parts(input, input_DETAILLLLED,Command_Numbers,100);\
 furthur_process_input(strings_to_use1, number_of_strings1,input_DETAILLLLED,Command_Numbers);\
+free(input_DETAILLLLED);\
 char ***strings_to_use2=NULL;\
 int *number_of_strings2=NULL;\
 int Command_Numbers2=0;\
@@ -494,9 +496,12 @@ if(!(strcmp(strings_to_use1[i][i1], options[j]))){\
 }\
 }}}\
     for(int ii=0;ii<number_of_COMMANDS; ii++){\
-    wait(NULL);}return 0;\
-}\
-else{wait(NULL);}}}
+    wait(NULL);}   free(pipe_struct_array);cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);\
+               for (int i=0; i<NUMBER_OF_OPTIONS; i++) {\
+               free(options[i]);\
+               }\
+               free(options);return 0;}\
+else{wait(NULL);}}free(pipe_struct_array);}
 
 int main(){    
     char **INPUT_DETAILED=NULL;
@@ -526,6 +531,7 @@ while (1==1){
     }
     else{
     runprograms(strings_to_use,options, number_of_strings, INPUT_DETAILED,  number_of_COMMANDS,  NUMBER_OF_OPTIONS);
+   
     cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);
 
     }
