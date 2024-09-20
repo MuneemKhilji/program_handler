@@ -1,6 +1,7 @@
 //copyright 2024 Muneem. 
 //this code is only meant to be used by those who are allowed to use it and not to be copied. 
 #include <bits/pthreadtypes.h>
+#include <errno.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include <string.h>
@@ -13,15 +14,23 @@
        #include <sys/stat.h>
 #define MAXIMUM_FUNC 3
 struct pipe_struct{
-    int pipe[2];
+    int pipe2[2];
     char *identifier;
 };
+
 struct pipe_struct *pipe_struct_array=NULL;
 void init_all(){
     pipe_struct_array = (struct pipe_struct*)malloc(sizeof(struct pipe_struct));
 
 }
 int amount_of_pipes=0;
+void init_end_all(){
+    for (int i =0; i<amount_of_pipes; i++) {
+    close(pipe_struct_array[i].pipe2[0]);
+    close(pipe_struct_array[i].pipe2[1]);
+
+    }
+}
 void run_program_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER  ){
     //empty block because no code is needed in this option
 }
@@ -30,8 +39,8 @@ void recieve_pipe_init(char ***arguments,int *number_of_arguments, int COMMAND_N
     }
 void store_pipe_init(char ***arguments,int *number_of_arguments , int COMMAND_NUMBER ){
 pipe_struct_array[amount_of_pipes].identifier=arguments[COMMAND_NUMBER][0];
-if(pipe(pipe_struct_array[amount_of_pipes].pipe)==-1){
-
+if(pipe(pipe_struct_array[amount_of_pipes].pipe2)==-1){
+fprintf(stderr, "\n making pipe failed\n");
 }
     amount_of_pipes++;
     pipe_struct_array = (struct pipe_struct*)realloc(pipe_struct_array, amount_of_pipes*sizeof(struct pipe_struct));
@@ -100,6 +109,7 @@ void pipe_reciever(int command_NUMBER,char ***strings_to_use, int *number_of_str
  int j =-1;
 for(int i =0; i<amount_of_pipes;i++){
 if(!strcmp(pipe_name[1], pipe_struct_array[i].identifier)){
+    fprintf(stderr, "\n name is %s\n on reciever", pipe_name[1]);
     j=i;
     break;
 }
@@ -109,11 +119,14 @@ if(j==-1){
 fprintf(stderr, "\npipe not found\n");
 }
 else{
- if(dup2(pipe_struct_array[j].pipe[0], fileno(stdin))==-1){
-    fprintf(stderr, "\npipe joining failed on recieving end\n");
+    fprintf(stderr, "\nloop done\n");
 
+
+  if(dup2(pipe_struct_array[j].pipe2[0], STDIN_FILENO)==-1){
+    fprintf(stderr,"\nerror is %s\n", errno);
  }
-
+close(pipe_struct_array[j].pipe2[1]);
+close(pipe_struct_array[j].pipe2[0]);
 }
     }
 
@@ -130,11 +143,15 @@ if(j==-1){
 fprintf(stderr, "\npipe not found\n");
 }
 else{
- if(dup2(pipe_struct_array[j].pipe[1], fileno(stdout))==-1){
+        fprintf(stderr, "\nname on storing end is %s\n", pipe_name[0]);
+
+ if(dup2(pipe_struct_array[j].pipe2[1], STDOUT_FILENO)==-1){
     fprintf(stderr, "\npipe joining failed on sending end\n");
 
  }
-
+ 
+close(pipe_struct_array[j].pipe2[1]);
+close(pipe_struct_array[j].pipe2[0]);
 }
 
 }
@@ -144,7 +161,14 @@ void Run_progam_destroyer(){}
 int bool=0;
 void pipe_store_destroyer(){
 if(bool){
+    for (int i =0; i<amount_of_pipes; i++) {
+    close(pipe_struct_array[i].pipe2[0]);
+    close(pipe_struct_array[i].pipe2[1]);
+
+    }
+    fprintf(stderr,"\n am gonna free\n");
     free(pipe_struct_array);
+    fprintf(stderr,"\n free\n");
 }
 else{
 bool =1;
@@ -152,7 +176,15 @@ bool =1;
 }
 void pipe_reciever_destroyer(){
 if(bool){
+
+    for (int i =0; i<amount_of_pipes; i++) {
+    close(pipe_struct_array[i].pipe2[0]);
+    close(pipe_struct_array[i].pipe2[1]);
+
+    }
+    fprintf(stderr,"\n am gonna free\n");
     free(pipe_struct_array);
+    fprintf(stderr,"\n free\n");
 }
 else{
 bool =1;
@@ -464,8 +496,10 @@ if(!(strcmp(strings_to_use1[i][i1], options[j]))){\
 }\
 }}\
 for(int i =0; i<number_of_COMMANDS; i++){\
+fprintf(stderr,"\n process about to be created\n");\
 if(!Command_Numbers){continue;}\
 if(fork()==0){\
+fprintf(stderr,"\n process created\n");\
 int options_selected[MAXIMUM_FUNC];\
 for(int j=0; j<NUMBER_OF_OPTIONS; j++){\
 if(j==MAXIMUM_FUNC){\
@@ -494,14 +528,11 @@ if(!(strcmp(strings_to_use1[i][i1], options[j]))){\
             functions[j](i,strings_to_use, number_of_strings,strings_to_use2, number_of_strings2);\
 }\
 }\
-}}}\
+}return 0;}}\
     for(int ii=0;ii<number_of_COMMANDS; ii++){\
-    wait(NULL);}   free(pipe_struct_array);cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);\
-               for (int i=0; i<NUMBER_OF_OPTIONS; i++) {\
-               free(options[i]);\
-               }\
-               free(options);return 0;}\
-else{wait(NULL);}}free(pipe_struct_array);}
+    init_end_all();\
+    wait(NULL);}   return 0;}\
+else{wait(NULL);}}}
 
 int main(){    
     char **INPUT_DETAILED=NULL;
