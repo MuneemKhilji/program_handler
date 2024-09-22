@@ -1,8 +1,7 @@
 //copyright 2024 Muneem. 
 //this code is only meant to be used by those who are allowed to use it and not to be copied. 
-#include <bits/pthreadtypes.h>
-#include <errno.h>
 #include<stdio.h>
+#include<semaphore.h>
 #include<stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -12,12 +11,13 @@
 #include <sys/shm.h>
       #include <sys/types.h>
        #include <sys/stat.h>
-#define MAXIMUM_FUNC 3
+#include<errno.h>
+#define MAXIMUM_FUNC 5
 struct pipe_struct{
     int pipe2[2];
     char *identifier;
 };
-
+#define close_(a, b) if(close(a)==-1){fprintf(stderr, "failed to close cuz error named %s in the context of %s", errno, b);}
 struct pipe_struct *pipe_struct_array=NULL;
 void init_all(){
     pipe_struct_array = (struct pipe_struct*)malloc(sizeof(struct pipe_struct));
@@ -26,8 +26,9 @@ void init_all(){
 int amount_of_pipes=0;
 void init_end_all(){
     for (int i =0; i<amount_of_pipes; i++) {
-    close(pipe_struct_array[i].pipe2[0]);
-    close(pipe_struct_array[i].pipe2[1]);
+    fprintf(stderr, "\nclosed pipe round %d\n", i);
+    close_(pipe_struct_array[i].pipe2[0], "init_end");
+    close_(pipe_struct_array[i].pipe2[1], "init_end");
 
     }
 }
@@ -35,6 +36,13 @@ void run_program_init(char ***arguments,int *number_of_arguments, int COMMAND_NU
     //empty block because no code is needed in this option
 }
 void recieve_pipe_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
+    
+    }
+char *string_IO=NULL;
+void take_input_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
+    
+    }
+void print_stuff_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
     
     }
 void store_pipe_init(char ***arguments,int *number_of_arguments , int COMMAND_NUMBER ){
@@ -45,7 +53,7 @@ fprintf(stderr, "\n making pipe failed\n");
     amount_of_pipes++;
     pipe_struct_array = (struct pipe_struct*)realloc(pipe_struct_array, amount_of_pipes*sizeof(struct pipe_struct));
     }
-    void (*functions_init[MAXIMUM_FUNC])(char ***, int *,int)={&run_program_init, &store_pipe_init, &recieve_pipe_init};
+    void (*functions_init[MAXIMUM_FUNC])(char ***, int *,int)={&run_program_init, &store_pipe_init, &recieve_pipe_init, &take_input_init, &print_stuff_init};
 
 #define take_input(input,  sizeof_input){\
          memset((void*)input, 0, sizeof_input);\
@@ -101,69 +109,76 @@ void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_string
     execvp(argv[0], argv+1);
     }
 
+void TAKE_INPUT(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
+
+}
+void PRINT_OUTPUT(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
+}
 
 
-#define pipe_name strings_to_use2[command_NUMBER]
 
 void pipe_reciever(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
- int j =-1;
-for(int i =0; i<amount_of_pipes;i++){
-if(!strcmp(pipe_name[1], pipe_struct_array[i].identifier)){
-    fprintf(stderr, "\n name is %s\n on reciever", pipe_name[1]);
-    j=i;
+int i =0;
+for(;i<amount_of_pipes;i++){
+if(!strcmp(strings_to_use2[command_NUMBER][1], pipe_struct_array[i].identifier)){
+    fprintf(stderr, "\nname on receiving end is %s\n", pipe_struct_array[i].identifier);
+    
+if(dup2(pipe_struct_array[i].pipe2[0], STDIN_FILENO)==-1){
+    fprintf(stderr,"\n error while recieving, error is %s", errno);
+ }
+close_(pipe_struct_array[i].pipe2[0], "pipe_reciever");
+ 
+close_(pipe_struct_array[i].pipe2[1], "pipe_reciever");
+ fprintf(stderr, "\n dup2 is done RECEIVER CONTEXT\n");
+
     break;
 }
 
 }
-if(j==-1){
+if(i==amount_of_pipes){
 fprintf(stderr, "\npipe not found\n");
 }
-else{
-    fprintf(stderr, "\nloop done\n");
 
-
-  if(dup2(pipe_struct_array[j].pipe2[0], STDIN_FILENO)==-1){
-    fprintf(stderr,"\nerror is %s\n", errno);
- }
-close(pipe_struct_array[j].pipe2[1]);
-close(pipe_struct_array[j].pipe2[0]);
-}
     }
 
 void pipe_store(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
-int j =-1;
-for(int i =0; i<amount_of_pipes;i++){
-if(!strcmp(pipe_name[0], pipe_struct_array[i].identifier)){
-    j=i;
+int i =0;
+for(;i<amount_of_pipes;i++){
+if(!strcmp(strings_to_use2[command_NUMBER][0],
+ pipe_struct_array[i].identifier)){
+    fprintf(stderr, "\nname on storing end is %s\n", pipe_struct_array[i].identifier);
+    
+    if(dup2(pipe_struct_array[i].pipe2[1], STDOUT_FILENO)==-1){
+    fprintf(stderr, "\npipe joining failed on sending end\n");
+
+ }
+
+close_(pipe_struct_array[i].pipe2[0], "pipe_store");
+ 
+close_(pipe_struct_array[i].pipe2[1], "pipe_store");
+  fprintf(stderr, "\n dup2 is done STORE CONTEXT\n");
+
     break;
 }
 
 }
-if(j==-1){
+if(i==amount_of_pipes){
 fprintf(stderr, "\npipe not found\n");
 }
-else{
-        fprintf(stderr, "\nname on storing end is %s\n", pipe_name[0]);
-
- if(dup2(pipe_struct_array[j].pipe2[1], STDOUT_FILENO)==-1){
-    fprintf(stderr, "\npipe joining failed on sending end\n");
-
- }
- 
-close(pipe_struct_array[j].pipe2[1]);
-close(pipe_struct_array[j].pipe2[0]);
-}
 
 }
-    void (*functions[MAXIMUM_FUNC])(int, char ***,int *, char ***,int *)={&Run_progam, &pipe_store, &pipe_reciever};
+    void (*functions[MAXIMUM_FUNC])(int, char ***,int *, char ***,int *)={&Run_progam, &pipe_store, &pipe_reciever, &TAKE_INPUT, PRINT_OUTPUT};
+void TAKE_INPUT_destroyer(){}
+void PRINT_OUTPUT_destroyer(){}
 
 void Run_progam_destroyer(){}
 int bool=0;
 void pipe_store_destroyer(){
 if(bool){
     for (int i =0; i<amount_of_pipes; i++) {
-    close(pipe_struct_array[i].pipe2[0]);
-    close(pipe_struct_array[i].pipe2[1]);
+    fprintf(stderr, "\n gonna destroy in store\n");
+    close_(pipe_struct_array[i].pipe2[0], "pipe_store_destroyer");
+    close_(pipe_struct_array[i].pipe2[1],"pipe_store_destroyer");
 
     }
     fprintf(stderr,"\n am gonna free\n");
@@ -176,10 +191,10 @@ bool =1;
 }
 void pipe_reciever_destroyer(){
 if(bool){
-
+    fprintf(stderr, "\n gonna destroy in store\n");
     for (int i =0; i<amount_of_pipes; i++) {
-    close(pipe_struct_array[i].pipe2[0]);
-    close(pipe_struct_array[i].pipe2[1]);
+    close_(pipe_struct_array[i].pipe2[0], "pipe_reciever_destroyer");
+    close_(pipe_struct_array[i].pipe2[1], "pipe_reciever_destroyer");
 
     }
     fprintf(stderr,"\n am gonna free\n");
@@ -190,7 +205,7 @@ else{
 bool =1;
 }
 }
-void(*function_destroyer[MAXIMUM_FUNC])()={&Run_progam_destroyer, &pipe_store_destroyer, &pipe_reciever_destroyer};
+void(*function_destroyer[MAXIMUM_FUNC])()={&Run_progam_destroyer, &pipe_store_destroyer, &pipe_reciever_destroyer, &TAKE_INPUT_destroyer, &PRINT_OUTPUT_destroyer};
   #define cleanmem( strings_to_use,  number_of_strings,  INPUT_DETAILED, number_of_COMMANDS){\
     for(int i=0; i<number_of_COMMANDS;i++){\
                 free(INPUT_DETAILED[i]);\
@@ -460,7 +475,9 @@ void(*function_destroyer[MAXIMUM_FUNC])()={&Run_progam_destroyer, &pipe_store_de
    }\
     }}\
 }
-#define runprograms(strings_to_use,options, number_of_strings, INPUT_DETAILED,  number_of_COMMANDS,  NUMBER_OF_OPTIONS){\
+#define runprograms(strings_to_use,options, \
+number_of_strings, INPUT_DETAILED,\
+number_of_COMMANDS,  NUMBER_OF_OPTIONS){\
 if(!(number_of_COMMANDS>0)){\
     }\
 else{\
@@ -501,18 +518,19 @@ if(!Command_Numbers){continue;}\
 if(fork()==0){\
 fprintf(stderr,"\n process created\n");\
 int options_selected[MAXIMUM_FUNC];\
+memset(options_selected, 1, MAXIMUM_FUNC*sizeof(int));\
 for(int j=0; j<NUMBER_OF_OPTIONS; j++){\
 if(j==MAXIMUM_FUNC){\
     break;\
 }\
 for(int i1=0; i1<number_of_strings1[i]; i1++){\
 if(!(strcmp(strings_to_use1[i][i1], options[j]))){\
-            options_selected[j]=1;\
+            options_selected[j]=0;\
 }\
 }\
 }\
 for(int i2 =0;i2<MAXIMUM_FUNC; i2++){\
-if(options_selected[i2]){\
+if(!options_selected[i2]){\
 \
 }\
 else{\
@@ -528,12 +546,16 @@ if(!(strcmp(strings_to_use1[i][i1], options[j]))){\
             functions[j](i,strings_to_use, number_of_strings,strings_to_use2, number_of_strings2);\
 }\
 }\
-}return 0;}}\
-    for(int ii=0;ii<number_of_COMMANDS; ii++){\
-    init_end_all();\
-    wait(NULL);}   return 0;}\
-else{wait(NULL);}}}
-
+}return 0;}}init_end_all();for\
+(int i=0; i<number_of_COMMANDS; i++){wait(NULL);}\
+return 0;}wait(NULL);}}
+#define optional_manual_cleanup_for_main() {\
+  cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);\
+               for (int i=0; i<NUMBER_OF_OPTIONS; i++) {\
+               free(options[i]);\
+               }\
+               free(options);\
+}
 int main(){    
     char **INPUT_DETAILED=NULL;
     char ***strings_to_use=NULL;
@@ -548,19 +570,16 @@ while (1==1){
 
     printf("\nenter ur command:$  ");
     take_input(input, 1000);
-
+if(!(strcmp(input, "QTE\n"))){
+         
+               return 0;
+    }
+else{
     process_input_into_parts(input,INPUT_DETAILED, number_of_COMMANDS, 1000);
  
     furthur_process_input(strings_to_use, number_of_strings,INPUT_DETAILED,number_of_COMMANDS);
-    if(!(strcmp(input, "QTE\n"))){
-           cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);
-               for (int i=0; i<NUMBER_OF_OPTIONS; i++) {
-               free(options[i]);
-               }
-               free(options);
-               return 0;
-    }
-    else{
+   
+
     runprograms(strings_to_use,options, number_of_strings, INPUT_DETAILED,  number_of_COMMANDS,  NUMBER_OF_OPTIONS);
    
     cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);
