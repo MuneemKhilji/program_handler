@@ -1,5 +1,6 @@
-//copyright 2024 Muneem. 
-//this code is only meant to be used by those who are allowed to use it and not to be copied. 
+/*copyright 2024 Muneem. 
+/this code is only meant to be used by those who are allowed to use it and not to be copied. 
+*/
 #include<stdio.h>
 #include<semaphore.h>
 #include<stdlib.h>
@@ -17,6 +18,137 @@ struct pipe_struct{
     int pipe2[2];
     char *identifier;
 };
+
+#define process_input_into_parts(input,INPUT_DETAILED,  number_of_COMMANDS,  size_of_input,token){\
+    number_of_COMMANDS=0;\
+ if(input[0]=='\n'){fprintf(stderr,"\ninput empty please write something in it\n");}\
+ else{\
+ INPUT_DETAILED=NULL;\
+ INPUT_DETAILED =(char**)malloc(0);\
+    \
+    for(int i=0,j=0, c=0, e=0;; i++, e++){\
+    if(size_of_input==i){\
+\
+        break;\
+    }\
+        if(i==1000){\
+            break;\
+        }\
+    if(input[i]== token&&!(j||c)){\
+                number_of_COMMANDS++;\
+\
+        INPUT_DETAILED = (char**) realloc((void**)INPUT_DETAILED, (number_of_COMMANDS)*sizeof(char*));\
+         INPUT_DETAILED[number_of_COMMANDS-1]=NULL;\
+\
+        INPUT_DETAILED[number_of_COMMANDS-1]= (char*) realloc((void*)INPUT_DETAILED[number_of_COMMANDS-1],(e+1)*sizeof(char));\
+\
+        memcpy((void*)INPUT_DETAILED[number_of_COMMANDS-1], (void*)(input+(i-e)),(e*sizeof(char)));\
+        INPUT_DETAILED[number_of_COMMANDS-1][e]='\0';\
+        e=-1;\
+\
+    }\
+    if(input[i]=='\n'&&!(j||c)){\
+        \
+    }\
+\
+    if(input[i]=='\''){\
+         if(j==1){\
+            j=0;\
+        \
+    }\
+         else{\
+            if(c==0){\
+            j=1;\
+            }\
+        }\
+    }\
+    if(input[i]=='\"'){\
+         if(c==1){\
+            c=0;\
+        \
+    }\
+         else{\
+            if(j==0){\
+            c=1;\
+            }\
+        }\
+    }\
+\
+   }}\
+}
+
+#define furthur_process_input(strings_to_use,number_of_strings, INPUT_DETAILED,  number_of_COMMANDS, tocken){\
+    if(number_of_COMMANDS==0){}\
+        else{\
+    number_of_strings = (int*)malloc(number_of_COMMANDS*sizeof(int));\
+    memset(number_of_strings, 0, number_of_COMMANDS*sizeof(int));\
+    strings_to_use = (char***)malloc(number_of_COMMANDS*sizeof(char**));\
+    for(int i =0; i<number_of_COMMANDS; i++){ \
+        strings_to_use[i]=NULL;\
+    }\
+    \
+    for(int COMMAND_NUMBER=0; COMMAND_NUMBER<number_of_COMMANDS;COMMAND_NUMBER++){\
+    \
+    for(int i=0,j=0, c=0, e=0;; i++, e++){\
+        \
+        if(INPUT_DETAILED[COMMAND_NUMBER][i]=='\0'){\
+            break;\
+        }\
+    if(INPUT_DETAILED[COMMAND_NUMBER][i]== tocken&&!(j||c)){\
+\
+        if(INPUT_DETAILED[COMMAND_NUMBER][i+1]== tocken){\
+            printf("bro wrong syntax!!!!");\
+            exit(1);\
+        }\
+\
+\
+\
+\
+    strings_to_use[COMMAND_NUMBER] = (char**) realloc((void**)strings_to_use[COMMAND_NUMBER], (number_of_strings[COMMAND_NUMBER]+1)*sizeof(char*));\
+\
+    strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]]=NULL;\
+\
+    strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]]= (char*) realloc((void*)strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]],(e+1)*sizeof(char));\
+\
+        memcpy((void*)strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]], (void*)(&INPUT_DETAILED[COMMAND_NUMBER][i-e]),((e)*sizeof(char)));\
+\
+        strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]][e]='\0';\
+\
+        e=-1;\
+                number_of_strings[COMMAND_NUMBER]++;\
+    }\
+    if(INPUT_DETAILED[COMMAND_NUMBER][i]=='\n'&&!(j||c)){\
+\
+            break;\
+        \
+    }\
+\
+    if(INPUT_DETAILED[COMMAND_NUMBER][i]=='\''){\
+         if(j==1){\
+            j=0;\
+        \
+    }\
+         else{\
+            if(c==0){\
+            j=1;\
+            }\
+        }\
+    }\
+    if(INPUT_DETAILED[COMMAND_NUMBER][i]=='\"'){\
+         if(c==1){\
+            c=0;\
+        \
+    }\
+         else{\
+            if(j==0){\
+            c=1;\
+            }\
+        }\
+    }\
+\
+   }\
+    }}\
+}
 #define take_input(input,  sizeof_input){\
          memset((void*)input, 0, sizeof_input);\
 \
@@ -78,14 +210,38 @@ void init_end_all(){
 void run_program_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER  ){
     //empty block because no code is needed in this option
 }
+int pointer_for_input=0;
+int pointer_for_output=0;
+
+char **input_strings=NULL;
+int  number_of_arguments__=0;/*this one is for input*/
+
+char **output_strings=NULL;
+int  number_of_arguments__OUTPUT=0;
+
+int BOOL_weather_INIT_FOR_INPUT_USED=0;
+int BOOL_weather_INIT_FOR_OUTPUT_USED=0;
 void recieve_pipe_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
     
     }
+
 void take_input_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
-  
+if(BOOL_weather_INIT_FOR_INPUT_USED){
+
+    }
+else{
+    process_input_into_parts(arguments[COMMAND_NUMBER][2], input_strings,number_of_arguments__ , strlen(arguments[COMMAND_NUMBER][2]), ';');
+    BOOL_weather_INIT_FOR_INPUT_USED=1;
+}
     }
 void print_stuff_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
- 
+if(BOOL_weather_INIT_FOR_OUTPUT_USED){
+
+    }
+else{
+    process_input_into_parts(arguments[COMMAND_NUMBER][2], output_strings,number_of_arguments__OUTPUT , strlen(arguments[COMMAND_NUMBER][3]), ';');
+    BOOL_weather_INIT_FOR_OUTPUT_USED=1;
+}
     }
 void store_pipe_init(char ***arguments,int *number_of_arguments , int COMMAND_NUMBER ){
 pipe_struct_array[amount_of_pipes].identifier=arguments[COMMAND_NUMBER][0];
@@ -192,7 +348,7 @@ bool =1;
 }
 }
 void(*function_destroyer[MAXIMUM_FUNC])()={&Run_progam_destroyer, &pipe_store_destroyer, &pipe_reciever_destroyer, &TAKE_INPUT_destroyer, &PRINT_OUTPUT_destroyer};
-  #define cleanmem( strings_to_use,  number_of_strings,  INPUT_DETAILED, number_of_COMMANDS){\
+  #define OPTIONAL_cleanmem( strings_to_use,  number_of_strings,  INPUT_DETAILED, number_of_COMMANDS){\
     for(int i=0; i<number_of_COMMANDS;i++){\
                 free(INPUT_DETAILED[i]);\
                 for(int j=0;j<number_of_strings[i];j++){\
@@ -331,136 +487,7 @@ void(*function_destroyer[MAXIMUM_FUNC])()={&Run_progam_destroyer, &pipe_store_de
    }\
     }
 
-#define process_input_into_parts(input,INPUT_DETAILED,  number_of_COMMANDS,  size_of_input){\
-    number_of_COMMANDS=0;\
- if(input[0]=='\n'){fprintf(stderr,"\ninput empty please write something in it\n");}\
- else{\
- INPUT_DETAILED=NULL;\
- INPUT_DETAILED =(char**)malloc(0);\
-    \
-    for(int i=0,j=0, c=0, e=0;; i++, e++){\
-    if(size_of_input==i){\
-\
-        break;\
-    }\
-        if(i==1000){\
-            break;\
-        }\
-    if(input[i]== '|'&&!(j||c)){\
-                number_of_COMMANDS++;\
-\
-        INPUT_DETAILED = (char**) realloc((void**)INPUT_DETAILED, (number_of_COMMANDS)*sizeof(char*));\
-         INPUT_DETAILED[number_of_COMMANDS-1]=NULL;\
-\
-        INPUT_DETAILED[number_of_COMMANDS-1]= (char*) realloc((void*)INPUT_DETAILED[number_of_COMMANDS-1],(e+1)*sizeof(char));\
-\
-        memcpy((void*)INPUT_DETAILED[number_of_COMMANDS-1], (void*)(input+(i-e)),(e*sizeof(char)));\
-        INPUT_DETAILED[number_of_COMMANDS-1][e]='\0';\
-        e=-1;\
-\
-    }\
-    if(input[i]=='\n'&&!(j||c)){\
-        \
-    }\
-\
-    if(input[i]=='\''){\
-         if(j==1){\
-            j=0;\
-        \
-    }\
-         else{\
-            if(c==0){\
-            j=1;\
-            }\
-        }\
-    }\
-    if(input[i]=='\"'){\
-         if(c==1){\
-            c=0;\
-        \
-    }\
-         else{\
-            if(j==0){\
-            c=1;\
-            }\
-        }\
-    }\
-\
-   }}\
-}
 
-#define furthur_process_input(strings_to_use,number_of_strings, INPUT_DETAILED,  number_of_COMMANDS){\
-    if(number_of_COMMANDS==0){}\
-        else{\
-    number_of_strings = (int*)malloc(number_of_COMMANDS*sizeof(int));\
-    memset(number_of_strings, 0, number_of_COMMANDS*sizeof(int));\
-    strings_to_use = (char***)malloc(number_of_COMMANDS*sizeof(char**));\
-    for(int i =0; i<number_of_COMMANDS; i++){ \
-        strings_to_use[i]=NULL;\
-    }\
-    \
-    for(int COMMAND_NUMBER=0; COMMAND_NUMBER<number_of_COMMANDS;COMMAND_NUMBER++){\
-    \
-    for(int i=0,j=0, c=0, e=0;; i++, e++){\
-        \
-        if(INPUT_DETAILED[COMMAND_NUMBER][i]=='\0'){\
-            break;\
-        }\
-    if(INPUT_DETAILED[COMMAND_NUMBER][i]== '&'&&!(j||c)){\
-\
-        if(INPUT_DETAILED[COMMAND_NUMBER][i+1]== '&'){\
-            printf("bro wrong syntax!!!!");\
-            exit(1);\
-        }\
-\
-\
-\
-\
-    strings_to_use[COMMAND_NUMBER] = (char**) realloc((void**)strings_to_use[COMMAND_NUMBER], (number_of_strings[COMMAND_NUMBER]+1)*sizeof(char*));\
-\
-    strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]]=NULL;\
-\
-    strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]]= (char*) realloc((void*)strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]],(e+1)*sizeof(char));\
-\
-        memcpy((void*)strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]], (void*)(&INPUT_DETAILED[COMMAND_NUMBER][i-e]),((e)*sizeof(char)));\
-\
-        strings_to_use[COMMAND_NUMBER][number_of_strings[COMMAND_NUMBER]][e]='\0';\
-\
-        e=-1;\
-                number_of_strings[COMMAND_NUMBER]++;\
-    }\
-    if(INPUT_DETAILED[COMMAND_NUMBER][i]=='\n'&&!(j||c)){\
-\
-            break;\
-        \
-    }\
-\
-    if(INPUT_DETAILED[COMMAND_NUMBER][i]=='\''){\
-         if(j==1){\
-            j=0;\
-        \
-    }\
-         else{\
-            if(c==0){\
-            j=1;\
-            }\
-        }\
-    }\
-    if(INPUT_DETAILED[COMMAND_NUMBER][i]=='\"'){\
-         if(c==1){\
-            c=0;\
-        \
-    }\
-         else{\
-            if(j==0){\
-            c=1;\
-            }\
-        }\
-    }\
-\
-   }\
-    }}\
-}
 #define runprograms(strings_to_use,options, \
 number_of_strings, INPUT_DETAILED,\
 number_of_COMMANDS,  NUMBER_OF_OPTIONS){\
@@ -475,16 +502,16 @@ char **input_DETAILLLLED=NULL;\
 int Command_Numbers=0;\
 char ***strings_to_use1=NULL;\
 int *number_of_strings1=NULL;\
-process_input_into_parts(input, input_DETAILLLLED,Command_Numbers,100);\
-furthur_process_input(strings_to_use1, number_of_strings1,input_DETAILLLLED,Command_Numbers);\
+process_input_into_parts(input, input_DETAILLLLED,Command_Numbers,100,'|');\
+furthur_process_input(strings_to_use1, number_of_strings1,input_DETAILLLLED,Command_Numbers, '&');\
 free(input_DETAILLLLED);\
 char ***strings_to_use2=NULL;\
 int *number_of_strings2=NULL;\
 int Command_Numbers2=0;\
 fprintf(stderr, "enter the arguments for the options YOU chose:\n");\
 take_input(input, 100);\
-process_input_into_parts(input, input_DETAILLLLED,Command_Numbers2,100);\
-furthur_process_input(strings_to_use2, number_of_strings2,input_DETAILLLLED,Command_Numbers2);\
+process_input_into_parts(input, input_DETAILLLLED,Command_Numbers2,100,'|');\
+furthur_process_input(strings_to_use2, number_of_strings2,input_DETAILLLLED,Command_Numbers2, '&');\
 init_all();\
 for(int i =0; i<number_of_COMMANDS; i++){\
 if(!Command_Numbers){continue;}\
@@ -559,15 +586,15 @@ if(!(strcmp(input, "QTE\n"))){
                return 0;
     }
 else{
-    process_input_into_parts(input,INPUT_DETAILED, number_of_COMMANDS, 1000);
+    process_input_into_parts(input,INPUT_DETAILED, number_of_COMMANDS, 1000,'|');
  
-    furthur_process_input(strings_to_use, number_of_strings,INPUT_DETAILED,number_of_COMMANDS);
+    furthur_process_input(strings_to_use, number_of_strings,INPUT_DETAILED,number_of_COMMANDS, '&');
    
 
     runprograms(strings_to_use,options, number_of_strings, INPUT_DETAILED,  number_of_COMMANDS,  NUMBER_OF_OPTIONS);
    
-    cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);
-
+    OPTIONAL_cleanmem(strings_to_use, number_of_strings, INPUT_DETAILED, number_of_COMMANDS);
+/*clean mem in this case wasent optional*/
     }
 }
 
