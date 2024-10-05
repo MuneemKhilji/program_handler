@@ -1,5 +1,5 @@
 /*copyright 2024 Muneem. 
-/this code is only meant to be used by those who are allowed to use it and not to be copied. 
+u can use it if u want but cant copy it.
 */
 #include<stdio.h>
 #include<semaphore.h>
@@ -210,38 +210,55 @@ void init_end_all(){
 void run_program_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER  ){
     //empty block because no code is needed in this option
 }
-int pointer_for_input=0;
-int pointer_for_output=0;
 
-char **input_strings=NULL;
-int  number_of_arguments__=0;/*this one is for input*/
-
-char **output_strings=NULL;
-int  number_of_arguments__OUTPUT=0;
-
-int BOOL_weather_INIT_FOR_INPUT_USED=0;
-int BOOL_weather_INIT_FOR_OUTPUT_USED=0;
 void recieve_pipe_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
     
     }
+int BOOL_INPUT=0;
+int BOOL_OUTPUT=0;
+char ***OUTPUT_DATA=NULL;
+int **INPUT_DATA=NULL;
+int *position_of_each_command_input=NULL;
+int *position_of_each_command_output=NULL;
 
+int *OUTPUT_STRINGS_ON_SPECIFIC_COMMAND_NUMBER=NULL;
+int *INPUT_STRINGS_ON_SPECIFIC_COMMAND_NUMBER=NULL;
+#define OSOSCN OUTPUT_STRINGS_ON_SPECIFIC_COMMAND_NUMBER
+#define ISOSCN INPUT_STRINGS_ON_SPECIFIC_COMMAND_NUMBER
+int Amount_of_input_data=0;
 void take_input_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
-if(BOOL_weather_INIT_FOR_INPUT_USED){
+if(!BOOL_INPUT){
+INPUT_DATA=malloc(COMMAND_NUMBER*sizeof(int*));
+ISOSCN=malloc(COMMAND_NUMBER*sizeof(int));
+position_of_each_command_input=malloc(COMMAND_NUMBER*sizeof(int*));
+
+BOOL_INPUT=1;
+}
+char **string_to_be_used_before_int_conversion;
+process_input_into_parts(arguments[COMMAND_NUMBER][2], string_to_be_used_before_int_conversion, ISOSCN[Amount_of_input_data], strlen(arguments[COMMAND_NUMBER][2])+1, '*');
+INPUT_DATA[Amount_of_input_data]=malloc(ISOSCN[Amount_of_input_data]*sizeof(int));
+position_of_each_command_input[Amount_of_input_data]= COMMAND_NUMBER;
+for(int j=0; j<ISOSCN[Amount_of_input_data];j++){
+    INPUT_DATA[COMMAND_NUMBER][j]=atoi(string_to_be_used_before_int_conversion[j]);
+}
+Amount_of_input_data++;
 
     }
-else{
-    process_input_into_parts(arguments[COMMAND_NUMBER][2], input_strings,number_of_arguments__ , strlen(arguments[COMMAND_NUMBER][2]), ';');
-    BOOL_weather_INIT_FOR_INPUT_USED=1;
-}
-    }
+     int amount_of_print_data=0;
 void print_stuff_init(char ***arguments,int *number_of_arguments, int COMMAND_NUMBER ){
-if(BOOL_weather_INIT_FOR_OUTPUT_USED){
+if(!BOOL_OUTPUT){
+OUTPUT_DATA=malloc(COMMAND_NUMBER*sizeof(char**));
+OSOSCN=malloc(COMMAND_NUMBER*sizeof(int));
+position_of_each_command_output=malloc(COMMAND_NUMBER*sizeof(int*));
 
-    }
-else{
-    process_input_into_parts(arguments[COMMAND_NUMBER][2], output_strings,number_of_arguments__OUTPUT , strlen(arguments[COMMAND_NUMBER][3]), ';');
-    BOOL_weather_INIT_FOR_OUTPUT_USED=1;
+BOOL_OUTPUT=1;
 }
+ int amount_of_print_data;
+position_of_each_command_output[amount_of_print_data]= COMMAND_NUMBER;
+
+process_input_into_parts(arguments[COMMAND_NUMBER][3], OUTPUT_DATA[amount_of_print_data], OSOSCN[amount_of_print_data], strlen(arguments[COMMAND_NUMBER][3])+1, '*');
+amount_of_print_data++;
+
     }
 void store_pipe_init(char ***arguments,int *number_of_arguments , int COMMAND_NUMBER ){
 pipe_struct_array[amount_of_pipes].identifier=arguments[COMMAND_NUMBER][0];
@@ -264,9 +281,28 @@ void Run_progam(int command_NUMBER,char ***strings_to_use, int *number_of_string
     }
 
 void TAKE_INPUT(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
+static int POSITION_OF_DATA_IN_DATA_POOL;
+if(!BOOL_INPUT){
+for(int i=0; i<Amount_of_input_data;i++){
+    if(position_of_each_command_input[i]==command_NUMBER){
+        POSITION_OF_DATA_IN_DATA_POOL=i;
+    }
 }
-
-
+}
+}
+int i=0;
+int BOOL_FOR_PRINT=0;
+#define PODIDP POSITION_OF_DATA_IN_DATA_POOL
+void PRINT_OUTPUT(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
+static int POSITION_OF_DATA_IN_DATA_POOL;
+if(!BOOL_FOR_PRINT){
+for(int i=0; i<amount_of_print_data;i++){
+    if(position_of_each_command_output[i]==command_NUMBER){
+        POSITION_OF_DATA_IN_DATA_POOL=i;
+    }
+}
+}
+}
 
 void pipe_reciever(int command_NUMBER,char ***strings_to_use, int *number_of_strings,char ***strings_to_use2, int *number_of_strings2){
 int i =0;
@@ -314,7 +350,7 @@ fprintf(stderr, "\npipe not found\n");
 }
 
 }
-void PRINT_OUTPUT(){}
+
     void (*functions[MAXIMUM_FUNC])(int, char ***,int *, char ***,int *)={&Run_progam, &pipe_store, &pipe_reciever, &TAKE_INPUT, &PRINT_OUTPUT};
 void TAKE_INPUT_destroyer(){}
 void PRINT_OUTPUT_destroyer(){}
