@@ -1,1 +1,1 @@
-Just a small shell like tool which is supposed to give some low level features too. first u give the command, then the options, then the arguments for the options then it runs and thats it. the syntax is a bit rigid but the tool itself is supposed to flexible in its function. The tool itself is far from finished and most of my commits are just small commits it self so yeah.If you wonna join then i would be more than happy to make u join this project. IN THIS BRANCH U CAN ADD NEW FILES AS SUGGESTIONS OR ADD COMMENTS TO THE MAIN PROGRAM HANDLER FILE AS SUGGESTIONS SO YEAH
+
